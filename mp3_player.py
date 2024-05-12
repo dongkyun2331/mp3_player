@@ -26,8 +26,10 @@ def play_music(music_directory):
         print("디렉토리에 MP3 파일이 없습니다.")
         return
 
-    # 현재 트랙의 인덱스
+    # 현재 트랙의 인덱스 및 무한 재생 플래그
     track_index = 0
+    repeat_one = False
+
     # 첫 번째 트랙 로드 및 재생
     pygame.mixer.music.load(os.path.join(music_directory, tracks[track_index]))
     pygame.mixer.music.play()
@@ -55,19 +57,26 @@ def play_music(music_directory):
                         pygame.mixer.music.unpause()
                 # 'n' 키로 다음 트랙 재생
                 elif event.key == pygame.K_n:
+                    if not repeat_one:
+                        track_index = (track_index + 1) % len(tracks)
+                        pygame.mixer.music.load(os.path.join(music_directory, tracks[track_index]))
+                        pygame.mixer.music.play()
+                # 'p' 키로 이전 트랙 재생
+                elif event.key == pygame.K_p:
+                    if not repeat_one:
+                        track_index = (track_index - 1 + len(tracks)) % len(tracks)
+                        pygame.mixer.music.load(os.path.join(music_directory, tracks[track_index]))
+                        pygame.mixer.music.play()
+                # 'r' 키로 현재 곡 무한 반복 토글
+                elif event.key == pygame.K_r:
+                    repeat_one = not repeat_one
+                    pygame.mixer.music.play(-1 if repeat_one else 1)
+            elif event.type == MUSIC_END:
+                if not repeat_one:
+                    # 현재 곡이 끝나면 자동으로 다음 곡 재생
                     track_index = (track_index + 1) % len(tracks)
                     pygame.mixer.music.load(os.path.join(music_directory, tracks[track_index]))
                     pygame.mixer.music.play()
-                # 'p' 키로 이전 트랙 재생
-                elif event.key == pygame.K_p:
-                    track_index = (track_index - 1 + len(tracks)) % len(tracks)
-                    pygame.mixer.music.load(os.path.join(music_directory, tracks[track_index]))
-                    pygame.mixer.music.play()
-            elif event.type is MUSIC_END:
-                # 현재 곡이 끝나면 자동으로 다음 곡 재생
-                track_index = (track_index + 1) % len(tracks)
-                pygame.mixer.music.load(os.path.join(music_directory, tracks[track_index]))
-                pygame.mixer.music.play()
         
         # 화면 배경을 진한 회색으로 채우기
         screen.fill((50, 50, 50))
@@ -79,9 +88,9 @@ def play_music(music_directory):
         playlist_y = 100
         for i, track in enumerate(tracks):
             if i == track_index:
-                track_text = font.render(track, True, (70, 130, 180))  # 현재 재생 중인 곡
+                track_text = font.render(track, True, (255, 0, 0) if repeat_one and i == track_index else (70, 130, 180))
             else:
-                track_text = font.render(track, True, (255, 255, 255))  # 흰색
+                track_text = font.render(track, True, (255, 255, 255))
             screen.blit(track_text, (20, playlist_y))
             playlist_y += 30
 
